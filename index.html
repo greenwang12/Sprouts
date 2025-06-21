@@ -6,34 +6,45 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Sprouts</h1>
 
-  <div class="controls">
-    <label for="dotCount">Starting Dots:</label>
-    <input type="number" id="dotCount" min="3" max="20" value="3">
+  <header>
+    <h1>Sprouts</h1>
 
-    <label for="boardShape">Board Shape:</label>
-    <select id="boardShape">
-      <option value="square">Square</option>
-      <option value="circle">Circle</option>
-      <option value="oval">Oval</option>
-    </select>
+    <div class="controls-container">
+      <div class="controls">
+        <div class="form-row">
+          <label for="dotCount">Starting Dots:</label>
+          <input type="number" id="dotCount" min="3" max="20" value="3">
+        </div>
+        <div class="form-row">
+          <label for="boardShape">Board Shape:</label>
+          <select id="boardShape">
+            <option value="square">Square</option>
+            <option value="circle">Circle</option>
+            <option value="oval">Oval</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="boardSize">Board Size:</label>
+          <select id="boardSize">
+            <option value="small">Small</option>
+            <option value="medium" selected>Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+        <button id="startBtn">Start</button>
+      </div>
+    </div>
+  </header>
 
-    <label for="boardSize">Board Size:</label>
-    <select id="boardSize">
-      <option value="small">Small</option>
-      <option value="medium" selected>Medium</option>
-      <option value="large">Large</option>
-    </select>
+  <main class="game-container">
+    <p id="status">Click "Start" to begin</p>
+    <div class="canvas-wrapper hidden">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <button id="restartBtn" class="hidden">Restart</button>
+  </main>
 
-    <button id="startBtn">Start</button>
-    <button id="restartBtn">Restart</button>
-  </div>
-
-  <p id="status">Click "Start" to begin</p>
-  <canvas id="gameCanvas"></canvas>
-
-  <!-- Visible choice popup for line/curve -->
   <div id="lineCurveChoice" class="choice-popup hidden">
     <p>Choose connection type:</p>
     <button onclick="chooseType('line')">Draw Line</button>

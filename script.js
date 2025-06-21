@@ -8,6 +8,9 @@ const shapeSelect = document.getElementById("boardShape");
 const sizeSelect = document.getElementById("boardSize");
 const lineCurvePopup = document.getElementById("lineCurveChoice");
 
+
+
+
 let dots = [], lines = [], selected = [], currentPlayer = 1;
 let boardShape = "square", controlPoint = null, isDraggingControl = false;
 let drawMode = "line", awaitingNewDotClick = false, pendingLine = null;
@@ -15,10 +18,23 @@ let curveLocked = false, lastPlayer = null;
 let gameOver = false;
 let hoverDot = null;
 
-
-
 startBtn.onclick = () => {
   gameOver = false;
+
+  // Hide input panel
+  document.querySelector(".controls-container").classList.add("hidden");
+
+  // Show canvas wrapper and restart button
+  document.querySelector(".canvas-wrapper").classList.remove("hidden");
+  restartBtn.classList.remove("hidden");
+
+  // Apply selected shape and size
+  const size = sizeSelect.value;
+  const shape = shapeSelect.value;
+  const wrapper = document.querySelector(".canvas-wrapper");
+  wrapper.className = "canvas-wrapper " + shape;
+  canvas.className = size;
+
   setupBoard();
   createDots(parseInt(dotCountInput.value));
   draw();
@@ -26,9 +42,15 @@ startBtn.onclick = () => {
 
 restartBtn.onclick = () => {
   gameOver = false;
-  setupBoard();
-  createDots(parseInt(dotCountInput.value));
-  draw();
+
+  // Show input panel again
+  document.querySelector(".controls-container").classList.remove("hidden");
+
+  // Hide canvas wrapper and restart button
+  document.querySelector(".canvas-wrapper").classList.add("hidden");
+  restartBtn.classList.add("hidden");
+
+  statusP.textContent = 'Click "Start" to begin';
 };
 
 function setupBoard() {
