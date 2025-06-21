@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sprouts Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Sprouts</h1>
+
+  <div class="controls">
+    <label for="dotCount">Starting Dots:</label>
+    <input type="number" id="dotCount" min="3" max="20" value="3">
+
+    <label for="boardShape">Board Shape:</label>
+    <select id="boardShape">
+      <option value="square">Square</option>
+      <option value="circle">Circle</option>
+      <option value="oval">Oval</option>
+    </select>
+
+    <label for="boardSize">Board Size:</label>
+    <select id="boardSize">
+      <option value="small">Small</option>
+      <option value="medium" selected>Medium</option>
+      <option value="large">Large</option>
+    </select>
+
+    <button id="startBtn">Start</button>
+    <button id="restartBtn">Restart</button>
+  </div>
+
+  <p id="status">Click "Start" to begin</p>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Visible choice popup for line/curve -->
+  <div id="lineCurveChoice" class="choice-popup hidden">
+    <p>Choose connection type:</p>
+    <button onclick="chooseType('line')">Draw Line</button>
+    <button onclick="chooseType('curve')">Draw Curve</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
