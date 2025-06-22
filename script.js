@@ -310,24 +310,45 @@ function isNearPath(p, line) {
 }
 
 function hasMoves() {
+  const controlOffsets = [
+    { x: 30, y: -30 },
+    { x: -30, y: 30 }
+  ];
+
   for (let i = 0; i < dots.length; i++) {
     const a = dots[i];
     if (a.connections >= 3) continue;
 
-    // Check self-loop
+    // Check self-loop (uses 2 connections)
     if (a.connections <= 1) {
-      const cp = { x: a.x + 30, y: a.y - 30 };
-      const testSelf = { a, b: a, cp };
-      if (!intersectsAny(testSelf)) return true;
+      for (const offset of controlOffsets) {
+        const cp = { x: a.x + offset.x, y: a.y + offset.y };
+        const testSelf = { a, b: a, cp };
+        if (!intersectsAny(testSelf)) return true;
+      }
     }
 
     for (let j = i + 1; j < dots.length; j++) {
       const b = dots[j];
       if (b.connections >= 3) continue;
-      const cp = midpoint(a, b);
-      const testLine = { a, b, cp: { x: cp.x + 30, y: cp.y - 30 } };
-      if (!intersectsAny(testLine)) return true;
+
+      for (const offset of controlOffsets) {
+        const cpMid = midpoint(a, b);
+        const cp = { x: cpMid.x + offset.x, y: cpMid.y + offset.y };
+        const testLine = { a, b, cp };
+        if (!intersectsAny(testLine)) return true;
+      }
     }
   }
   return false;
 }
+
+// ✅ Prevent double-click selection behavior
+canvas.addEventListener("dblclick", (e) => {
+  e.preventDefault(); // prevents accidental selection of buttons or canvas
+});
+
+// ✅ Prevent focus highlight on restart button
+restartBtn.addEventListener("click", () => {
+  restartBtn.blur(); // removes blue focus highlight
+});

@@ -187,3 +187,17 @@ canvas {
     height: auto;
   }
 }
+
+/* ✅ Prevent selection on double-click for entire body */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* ✅ Remove focus glow from buttons */
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
