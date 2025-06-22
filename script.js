@@ -267,12 +267,23 @@ function checkIntersection(line1, line2) {
   return curveIntersectsCurve(line1, line2);
 }
 
+function isSameEndpoints(p1, p2) {
+  return distance(p1, p2) < 0.1;
+}
+
 function curveIntersectsCurve(c1, c2) {
   const pts1 = [], pts2 = [];
   for (let t = 0; t <= 1; t += 0.02) {
     pts1.push(getCurvePoint(c1.a, c1.cp, c1.b, t));
     pts2.push(getCurvePoint(c2.a, c2.cp, c2.b, t));
   }
+
+  // ✅ Ignore shared endpoints
+  if (
+    isSameEndpoints(c1.a, c2.a) || isSameEndpoints(c1.a, c2.b) ||
+    isSameEndpoints(c1.b, c2.a) || isSameEndpoints(c1.b, c2.b)
+  ) return false;
+
   for (let i = 0; i < pts1.length - 1; i++) {
     for (let j = 0; j < pts2.length - 1; j++) {
       if (linesIntersect(pts1[i], pts1[i + 1], pts2[j], pts2[j + 1])) return true;
@@ -312,14 +323,17 @@ function isNearPath(p, line) {
 function hasMoves() {
   const controlOffsets = [
     { x: 30, y: -30 },
-    { x: -30, y: 30 }
+    { x: -30, y: 30 },
+    { x: 40, y: 0 },
+    { x: 0, y: 40 },
+    { x: -40, y: 0 },
+    { x: 0, y: -40 }
   ];
 
   for (let i = 0; i < dots.length; i++) {
     const a = dots[i];
     if (a.connections >= 3) continue;
 
-    // Check self-loop (uses 2 connections)
     if (a.connections <= 1) {
       for (const offset of controlOffsets) {
         const cp = { x: a.x + offset.x, y: a.y + offset.y };
@@ -343,12 +357,12 @@ function hasMoves() {
   return false;
 }
 
-// ✅ Prevent double-click selection behavior
+// Prevent double-click selection behavior
 canvas.addEventListener("dblclick", (e) => {
-  e.preventDefault(); // prevents accidental selection of buttons or canvas
+  e.preventDefault();
 });
 
-// ✅ Prevent focus highlight on restart button
+// Prevent focus highlight on restart button
 restartBtn.addEventListener("click", () => {
-  restartBtn.blur(); // removes blue focus highlight
+  restartBtn.blur();
 });
