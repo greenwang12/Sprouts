@@ -4,6 +4,7 @@ const statusP = document.getElementById("status");
 const dotCountInput = document.getElementById("dotCount");
 const startBtn = document.getElementById("startBtn");
 const restartBtn = document.getElementById("restartBtn");
+const undoBtn = document.getElementById("undoBtn");
 
 const LOGICAL_WIDTH = 1000;
 const LOGICAL_HEIGHT = 600;
@@ -12,6 +13,11 @@ const DOT_RADIUS = 7;
 let dots = [], lines = [], selected = [], currentPlayer = 1;
 let controlPoint = null, isDraggingControl = false, pendingLine = null;
 let curveLocked = false, gameOver = false, lastPlayer = null, hoverDot = null;
+
+// 🟦 Panning Variables
+let viewOffset = { x: 0, y: 0 };
+let isPanning = false;
+let lastPan = { x: 0, y: 0 };
 
 function fixCanvasResolution() {
   const dpr = window.devicePixelRatio || 1;
@@ -26,7 +32,7 @@ startBtn.onclick = () => {
   gameOver = false;
   document.querySelector(".controls-container").classList.add("hidden");
   document.querySelector(".canvas-wrapper").classList.remove("hidden");
-  restartBtn.classList.remove("hidden");
+  document.querySelector(".button-row").classList.remove("hidden");
   setupBoard();
   createDots(parseInt(dotCountInput.value));
   draw();
@@ -36,9 +42,15 @@ restartBtn.onclick = () => {
   gameOver = false;
   document.querySelector(".controls-container").classList.remove("hidden");
   document.querySelector(".canvas-wrapper").classList.add("hidden");
-  restartBtn.classList.add("hidden");
+  document.querySelector(".button-row").classList.add("hidden");
   statusP.textContent = 'Click "Start" to begin';
 };
+
+undoBtn.onclick = () => undoMove();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() === "u") undoMove();
+});
 
 function setupBoard() {
   fixCanvasResolution();
@@ -49,6 +61,7 @@ function setupBoard() {
   pendingLine = null;
   curveLocked = false;
   currentPlayer = 1;
+  viewOffset = { x: 0, y: 0 };
   statusP.textContent = "Player 1's turn";
 }
 
@@ -59,9 +72,7 @@ function createDots(n) {
     const x = margin + Math.random() * (LOGICAL_WIDTH - 2 * margin);
     const y = margin + Math.random() * (LOGICAL_HEIGHT - 2 * margin);
     const tooClose = dots.some(dot => distance(dot, { x, y }) < DOT_RADIUS * 4);
-    if (!tooClose) {
-      dots.push({ x, y, connections: 0 });
-    }
+    if (!tooClose) dots.push({ x, y, connections: 0 });
     tries++;
   }
 }
@@ -69,24 +80,53 @@ function createDots(n) {
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
 canvas.onmousedown = (e) => {
-  if (gameOver) return;
-  const { offsetX: x, offsetY: y } = e;
+  const canvasX = e.offsetX - viewOffset.x;
+  const canvasY = e.offsetY - viewOffset.y;
+  const clickedDot = dots.find(dot => distance(dot, { x: canvasX, y: canvasY }) < DOT_RADIUS + 3);
 
+  // ✅ Allow panning even after game is over
+  if (e.button === 0 && !clickedDot && !pendingLine) {
+    isPanning = true;
+    lastPan = { x: e.clientX, y: e.clientY };
+    return;
+  }
+
+  // ❌ Block game logic if game is over
+  if (gameOver) return;
+
+
+   // 🟨 Right-click to lock curve
   if (e.button === 2 && pendingLine) {
     curveLocked = true;
     return;
   }
 
+  if (!clickedDot || clickedDot.connections >= 3) return;
+
   if (pendingLine) {
-    if (controlPoint && distance({ x, y }, controlPoint) < 10) {
+    if (controlPoint && distance({ x: canvasX, y: canvasY }, controlPoint) < 10) {
       isDraggingControl = true;
-      return;
     }
     return;
   }
 
-  const clickedDot = dots.find(dot => distance(dot, { x, y }) < DOT_RADIUS + 3);
-  if (clickedDot && clickedDot.connections < 3 && !selected.includes(clickedDot)) {
+  if (selected.length === 1 && selected[0] === clickedDot) {
+    const offset = 40;
+    const left = { x: clickedDot.x - offset, y: clickedDot.y };
+    const right = { x: clickedDot.x + offset, y: clickedDot.y };
+    const cp = { x: clickedDot.x, y: clickedDot.y - 2 * offset };
+
+    controlPoint = { ...cp };
+    pendingLine = {
+      a: left,
+      b: right,
+      cp: cp,
+      type: "loop",
+      center: clickedDot
+    };
+    curveLocked = false;
+    statusP.textContent = `Player ${currentPlayer}'s turn: Double-click on the loop to place a new dot.`;
+  } else {
     selected.push(clickedDot);
     if (selected.length === 2) {
       const mid = midpoint(selected[0], selected[1]);
@@ -97,14 +137,27 @@ canvas.onmousedown = (e) => {
         type: "curve",
         cp: { ...controlPoint }
       };
+      curveLocked = false;
       statusP.textContent = `Player ${currentPlayer}'s turn: Double-click on the curve to place a new dot.`;
     }
-    draw();
   }
+
+  draw();
 };
 
 canvas.onmousemove = (e) => {
-  const { offsetX: x, offsetY: y } = e;
+  if (isPanning) {
+    const dx = e.clientX - lastPan.x;
+    const dy = e.clientY - lastPan.y;
+    viewOffset.x += dx;
+    viewOffset.y += dy;
+    lastPan = { x: e.clientX, y: e.clientY };
+    draw();
+    return;
+  }
+
+  const x = e.offsetX - viewOffset.x;
+  const y = e.offsetY - viewOffset.y;
   hoverDot = dots.find(dot => distance(dot, { x, y }) < DOT_RADIUS + 3) || null;
 
   if (isDraggingControl && controlPoint) {
@@ -121,11 +174,13 @@ canvas.onmousemove = (e) => {
 };
 
 canvas.onmouseup = () => {
+  isPanning = false;
   isDraggingControl = false;
 };
 
 canvas.ondblclick = (e) => {
-  const { offsetX: x, offsetY: y } = e;
+  const x = e.offsetX - viewOffset.x;
+  const y = e.offsetY - viewOffset.y;
   if (pendingLine && isNearPath({ x, y }, pendingLine)) {
     completeConnection({ x, y });
   } else if (pendingLine) {
@@ -133,61 +188,56 @@ canvas.ondblclick = (e) => {
   }
 };
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "u" || e.key === "U") {
-    undoMove();
-  }
-});
-
-function undoMove() {
-  if (pendingLine && selected.length > 0 && !curveLocked) {
-    selected.pop();
-    pendingLine = null;
-    controlPoint = null;
-    statusP.textContent = `Player ${currentPlayer}'s turn: Selection undone.`;
-    draw();
-  }
-}
-
 function completeConnection(dotPos) {
-  const [a, b] = selected;
-  if (a.connections >= 3 || b.connections >= 3) {
-    statusP.textContent = "Invalid move: Dot already has 3 connections.";
+  let a = pendingLine.a;
+  let b = pendingLine.b;
+  let newDot;
+
+  if (pendingLine.type === "loop") {
+  const center = pendingLine.center;
+
+  // ✅ Self-loop uses 2 connections; disallow if already 2 or more
+  if (center.connections >= 2 || intersectsAny(pendingLine)) {
+    statusP.textContent = "Invalid move.";
     resetSelection();
     return;
   }
-  if (intersectsAny(pendingLine)) {
-    statusP.textContent = "Invalid move: Line crosses another line.";
-    resetSelection();
-    return;
+
+  center.connections += 2; // ✅ Self-loop counts as 2 connections
+
+    newDot = getCurvePoint(a, pendingLine.cp, b, 0.5);
+    newDot.connections = 2;
+    dots.push(newDot);
+    const p01 = midpoint(a, pendingLine.cp);
+    const p12 = midpoint(pendingLine.cp, b);
+    lines.push({ a: a, b: newDot, cp: p01, type: "curve" });
+    lines.push({ a: newDot, b: b, cp: p12, type: "curve" });
+  } else {
+    if (a.connections >= 3 || b.connections >= 3 || intersectsAny(pendingLine)) {
+      statusP.textContent = "Invalid move.";
+      resetSelection();
+      return;
+    }
+
+    a.connections++;
+    b.connections++;
+    const p01 = midpoint(a, pendingLine.cp);
+    const p12 = midpoint(pendingLine.cp, b);
+    const mid = midpoint(p01, p12);
+    newDot = { x: mid.x, y: mid.y, connections: 2 };
+    dots.push(newDot);
+    lines.push({ a: a, b: newDot, cp: p01, type: "curve" });
+    lines.push({ a: newDot, b: b, cp: p12, type: "curve" });
   }
-
-  a.connections++;
-  if (a !== b) b.connections++;
-
-  const orig = pendingLine;
-  const p0 = orig.a;
-  const p1 = orig.cp;
-  const p2 = orig.b;
-  const p01 = midpoint(p0, p1);
-  const p12 = midpoint(p1, p2);
-  const mid = midpoint(p01, p12);
-
-  const newDot = { x: mid.x, y: mid.y, connections: 2 };
-  dots.push(newDot);
-
-  lines.push({ a: p0, b: newDot, cp: p01, type: "curve" });
-  lines.push({ a: newDot, b: p2, cp: p12, type: "curve" });
 
   lastPlayer = currentPlayer;
   currentPlayer = currentPlayer === 1 ? 2 : 1;
-
   resetSelection();
   draw();
 
   if (!hasMoves()) {
     gameOver = true;
-    statusP.textContent = `Game Over! Player ${lastPlayer} wins! (No valid moves remain)`;
+    statusP.textContent = `Game Over! Player ${lastPlayer} wins! (The one who made the last valid move wins🥳 )`;
   } else {
     statusP.textContent = `Player ${currentPlayer}'s turn`;
   }
@@ -200,24 +250,39 @@ function resetSelection() {
   curveLocked = false;
 }
 
+function undoMove() {
+  if (pendingLine) {
+    selected = [];
+    pendingLine = null;
+    controlPoint = null;
+    curveLocked = false;
+    statusP.textContent = `Player ${currentPlayer}'s turn: Move undone.`;
+    draw();
+  } else if (selected.length > 0) {
+    selected.pop();
+    statusP.textContent = `Player ${currentPlayer}'s turn: Dot deselected.`;
+    draw();
+  } else {
+    statusP.textContent = `Nothing to undo.`;
+  }
+}
+
 function draw() {
   ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   ctx.save();
-  for (const line of lines) {
-    drawCurve(line.a, line.cp, line.b, "#555", 2);
-  }
-  if (pendingLine) {
-    drawCurve(pendingLine.a, pendingLine.cp, pendingLine.b, "#888", 1, true);
-  }
-  for (const dot of dots) {
-    drawDot(dot);
-  }
+  ctx.translate(viewOffset.x, viewOffset.y); // 🟦 pan the canvas
+
+  for (const line of lines) drawCurve(line.a, line.cp, line.b, "#555", 2);
+  if (pendingLine) drawCurve(pendingLine.a, pendingLine.cp, pendingLine.b, "#888", 1, true);
+  for (const dot of dots) drawDot(dot);
+
   if (controlPoint) {
     ctx.beginPath();
     ctx.fillStyle = "orange";
     ctx.arc(controlPoint.x, controlPoint.y, 6, 0, 2 * Math.PI);
     ctx.fill();
   }
+
   ctx.restore();
 }
 
@@ -267,10 +332,6 @@ function checkIntersection(line1, line2) {
   return curveIntersectsCurve(line1, line2);
 }
 
-function isSameEndpoints(p1, p2) {
-  return distance(p1, p2) < 0.1;
-}
-
 function curveIntersectsCurve(c1, c2) {
   const pts1 = [], pts2 = [];
   for (let t = 0; t <= 1; t += 0.02) {
@@ -278,7 +339,6 @@ function curveIntersectsCurve(c1, c2) {
     pts2.push(getCurvePoint(c2.a, c2.cp, c2.b, t));
   }
 
-  // ✅ Ignore shared endpoints
   if (
     isSameEndpoints(c1.a, c2.a) || isSameEndpoints(c1.a, c2.b) ||
     isSameEndpoints(c1.b, c2.a) || isSameEndpoints(c1.b, c2.b)
@@ -290,6 +350,10 @@ function curveIntersectsCurve(c1, c2) {
     }
   }
   return false;
+}
+
+function isSameEndpoints(p1, p2) {
+  return distance(p1, p2) < 0.1;
 }
 
 function linesIntersect(p1, p2, q1, q2) {
@@ -322,47 +386,55 @@ function isNearPath(p, line) {
 
 function hasMoves() {
   const controlOffsets = [
-    { x: 30, y: -30 },
-    { x: -30, y: 30 },
-    { x: 40, y: 0 },
-    { x: 0, y: 40 },
-    { x: -40, y: 0 },
-    { x: 0, y: -40 }
+    { x: 30, y: -30 }, { x: -30, y: 30 },
+    { x: 40, y: 0 }, { x: 0, y: 40 },
+    { x: -40, y: 0 }, { x: 0, y: -40 }
   ];
 
   for (let i = 0; i < dots.length; i++) {
     const a = dots[i];
     if (a.connections >= 3) continue;
 
+    // 🔄 Check self-loop
     if (a.connections <= 1) {
       for (const offset of controlOffsets) {
+        const left = { x: a.x - 20, y: a.y };
+        const right = { x: a.x + 20, y: a.y };
         const cp = { x: a.x + offset.x, y: a.y + offset.y };
-        const testSelf = { a, b: a, cp };
-        if (!intersectsAny(testSelf)) return true;
+
+        const mid = getCurvePoint(left, cp, right, 0.5);
+        const p01 = midpoint(left, cp);
+        const p12 = midpoint(cp, right);
+
+        const seg1 = { a: left, b: mid, cp: p01 };
+        const seg2 = { a: mid, b: right, cp: p12 };
+
+        if (!intersectsAny(seg1) && !intersectsAny(seg2)) return true;
       }
     }
 
-    for (let j = i + 1; j < dots.length; j++) {
+    // 🔄 Check between two different dots
+    for (let j = 0; j < dots.length; j++) {
+      if (i === j) continue;
       const b = dots[j];
       if (b.connections >= 3) continue;
 
       for (const offset of controlOffsets) {
         const cpMid = midpoint(a, b);
         const cp = { x: cpMid.x + offset.x, y: cpMid.y + offset.y };
-        const testLine = { a, b, cp };
-        if (!intersectsAny(testLine)) return true;
+
+        const p01 = midpoint(a, cp);
+        const p12 = midpoint(cp, b);
+        const mid = midpoint(p01, p12);
+
+        const seg1 = { a: a, b: mid, cp: p01 };
+        const seg2 = { a: mid, b: b, cp: p12 };
+
+        if (!intersectsAny(seg1) && !intersectsAny(seg2)) return true;
       }
     }
   }
+
   return false;
 }
 
-// Prevent double-click selection behavior
-canvas.addEventListener("dblclick", (e) => {
-  e.preventDefault();
-});
-
-// Prevent focus highlight on restart button
-restartBtn.addEventListener("click", () => {
-  restartBtn.blur();
-});

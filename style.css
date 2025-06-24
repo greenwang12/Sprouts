@@ -2,7 +2,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #b7eaff, #fde6ff);
+ background: linear-gradient(135deg, #FFD0A1, #FFE2B0, #FFF3D4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,7 +42,7 @@ header {
   gap: 16px;
   margin: 30px;
   margin-top: 80px;
-  background: linear-gradient(135deg, rgba(183, 234, 255, 0.7), rgba(253, 230, 255, 0.7));
+  background: linear-gradient(135deg, rgba(255, 179, 71, 0.7), rgba(255, 204, 102, 0.7));
   padding: 40px 50px;
   border-radius: 80px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
@@ -200,4 +200,68 @@ body {
 button:focus {
   outline: none;
   box-shadow: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; /* spacing between buttons */
+  margin-top: 20px;
+}
+
+#restartBtn {
+  width: 100px;
+  margin-top: auto;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* prevents text from stretching button */
+}
+
+#undoBtn {
+  width: 100px;
+ margin-top: auto;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* prevents text from stretching button */
+}
+
+#restartBtn {
+  background: linear-gradient(145deg, #67c2ff, #3faefc);
+}
+
+#undoBtn {
+  background: linear-gradient(145deg, #ffaa7f, #ff9966);
+}
+
+#restartBtn:hover {
+  background-color: #57b2f0;
+}
+
+#undoBtn:hover {
+  background-color: #ff9966;
 }
