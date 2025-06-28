@@ -37,6 +37,7 @@ startBtn.onclick = () => {
 
   setupBoard();
   createDots(parseInt(dotCountInput.value));
+  smoothScrollToGame(); 
   draw();
 };
 
@@ -445,5 +446,30 @@ function hasMoves() {
   }
 
   return false;
+}
+
+function smoothScrollToGame() {
+  const target = document.getElementById("gameSection");
+  const targetY = target.getBoundingClientRect().top + window.pageYOffset;
+  const duration = 1000; // 1000ms = 1 second (increase for slower)
+  const startY = window.pageYOffset;
+  const diff = targetY - startY;
+  let start;
+
+  function step(timestamp) {
+    if (!start) start = timestamp;
+    const time = timestamp - start;
+    const percent = Math.min(time / duration, 1);
+
+    window.scrollTo(0, startY + diff * easeInOutQuad(percent));
+
+    if (time < duration) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+function easeInOutQuad(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
 
