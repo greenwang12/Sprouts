@@ -33,6 +33,8 @@ startBtn.onclick = () => {
   document.querySelector(".controls-container").classList.add("hidden");
   document.querySelector(".canvas-wrapper").classList.remove("hidden");
   document.querySelector(".button-row").classList.remove("hidden");
+  document.querySelector(".rules-wrapper").classList.remove("hidden");
+
   setupBoard();
   createDots(parseInt(dotCountInput.value));
   draw();
@@ -43,6 +45,7 @@ restartBtn.onclick = () => {
   document.querySelector(".controls-container").classList.remove("hidden");
   document.querySelector(".canvas-wrapper").classList.add("hidden");
   document.querySelector(".button-row").classList.add("hidden");
+  document.querySelector(".rules-wrapper").classList.add("hidden"); // ✅ Hide rules again
   statusP.textContent = 'Click "Start" to begin';
 };
 
@@ -66,14 +69,20 @@ function setupBoard() {
 }
 
 function createDots(n) {
-  const margin = 40;
-  let tries = 0;
-  while (dots.length < n && tries < n * 200) {
-    const x = margin + Math.random() * (LOGICAL_WIDTH - 2 * margin);
-    const y = margin + Math.random() * (LOGICAL_HEIGHT - 2 * margin);
-    const tooClose = dots.some(dot => distance(dot, { x, y }) < DOT_RADIUS * 4);
-    if (!tooClose) dots.push({ x, y, connections: 0 });
-    tries++;
+  dots = [];
+  const rows = Math.ceil(Math.sqrt(n));
+  const cols = Math.ceil(n / rows);
+  const spacingX = LOGICAL_WIDTH / (cols + 1);
+  const spacingY = LOGICAL_HEIGHT / (rows + 1);
+
+  let count = 0;
+  for (let row = 0; row < rows && count < n; row++) {
+    for (let col = 0; col < cols && count < n; col++) {
+      const x = spacingX * (col + 1);
+      const y = spacingY * (row + 1);
+      dots.push({ x, y, connections: 0 });
+      count++;
+    }
   }
 }
 
@@ -125,7 +134,7 @@ canvas.onmousedown = (e) => {
       center: clickedDot
     };
     curveLocked = false;
-    statusP.textContent = `Player ${currentPlayer}'s turn: Double-click on the loop to place a new dot.`;
+    statusP.textContent = `Player ${currentPlayer}'s turn: Right click to lock the loop.Then Double-click on the loop to place a new dot.`;
   } else {
     selected.push(clickedDot);
     if (selected.length === 2) {
@@ -138,7 +147,7 @@ canvas.onmousedown = (e) => {
         cp: { ...controlPoint }
       };
       curveLocked = false;
-      statusP.textContent = `Player ${currentPlayer}'s turn: Double-click on the curve to place a new dot.`;
+      statusP.textContent = `Player ${currentPlayer}'s turn: Right click to lock the curve.Then Double-click on the curve to place a new dot.`;
     }
   }
 

@@ -265,3 +265,73 @@ button:focus {
 #undoBtn:hover {
   background-color: #ff9966;
 }
+.rules-wrapper {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.rules-btn {
+  background: linear-gradient(145deg, #ffaa7f, #ff9966);
+  color: white;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.rules-btn:hover {
+  background: linear-gradient(145deg, #ff8f5c, #ff7844);
+  transform: scale(1.07);
+}
+
+.rules-panel {
+  display: none;
+  margin-top: 10px;
+  background: #fff3e8;
+  color: #333;
+  border: 2px solid #ffd4b8;
+  padding: 16px 20px;
+  border-radius: 20px;
+  width: 260px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  animation: fadeSlide 0.3s ease-in-out;
+  font-size: 14px;
+}
+
+.rules-wrapper:hover .rules-panel {
+  display: block;
+}
+
+.rules-panel strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.rules-panel ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.rules-panel li {
+  margin-bottom: 6px;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
