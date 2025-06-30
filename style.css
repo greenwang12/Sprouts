@@ -268,7 +268,7 @@ button:focus {
 .rules-wrapper {
   position: fixed;
   top: 20px;
-  left: 20px;
+  right: 20px;
   z-index: 1000;
   font-family: "Segoe UI", sans-serif;
 }
@@ -287,13 +287,23 @@ button:focus {
 }
 
 .rules-btn:hover {
-  background: linear-gradient(145deg, #ff8f5c, #ff7844);
+  background: linear-gradient(145deg, #ff7844, #ff7844);
   transform: scale(1.07);
 }
 
+.rules-wrapper {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  font-family: "Segoe UI", sans-serif;
+}
+
 .rules-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
   display: none;
-  margin-top: 10px;
   background: #fff3e8;
   color: #333;
   border: 2px solid #ffd4b8;
@@ -303,11 +313,13 @@ button:focus {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   animation: fadeSlide 0.3s ease-in-out;
   font-size: 14px;
+  margin-top: 8px;
 }
 
 .rules-wrapper:hover .rules-panel {
   display: block;
 }
+
 
 .rules-panel strong {
   display: block;
